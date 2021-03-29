@@ -28,6 +28,9 @@ The decompressed file should be a file with a .sql extension. That's a backup of
 To restore the database backup, you'll need to run a restore MySQL command as shown at https://phoenixnap.com/kb/how-to-backup-restore-a-mysql-database
 You can restore the backup of MySQL database on the VBox VM you already installed for the HWork, or on any other machine you prefer. 
 
+## ERD
+It was built in LucidChart following crow-foot notation
+
 ## Authors
 
 Team Carbon, based on the element humanity is made of.
