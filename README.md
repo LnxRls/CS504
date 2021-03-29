@@ -1,6 +1,6 @@
 # Course CS504 - Principles of Data Management and Mining
 
-A moderately deep, nevertheless, wide breadth dive into the world of RDBMS, NoSQL and distributed filesystems. 
+A moderately deep, nevertheless, wide dive into the world of RDBMS, NoSQL and distributed filesystems. 
 
 ## Files from Sprint 0-8 
 
