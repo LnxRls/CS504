@@ -12,7 +12,7 @@ The SQL script files contains lots of basic statements we use to create and popu
 
 ## Authors
 
-SK of Team Carbon 
+Team Carbon, based on the element humanity is made of.
 
 ## Acknowledgments
 
