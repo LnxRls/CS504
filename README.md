@@ -1,6 +1,6 @@
 # Course CD504
 
-A moderately deep, nevertheless, of wide breadth dive into the world of RDBMS, NoSQL and distributed filesystems. 
+A moderately deep, nevertheless, wide breadth dive into the world of RDBMS, NoSQL and distributed filesystems. 
 
 ## Files from Sprint 0-8 
 
