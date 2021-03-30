@@ -12,7 +12,7 @@ The SQL script files contains lots of basic statements we use to create and popu
 
 ## MySQL database backup restore process
 
-Download the files with extension .zip.00x where x=1,2,3 .
+Download the files with extension .zip.00x where x=1,2,3,4 .
 One way to do that is by following the directions from  https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository
 
 If that's complicated, then do as follows: 
