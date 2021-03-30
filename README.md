@@ -12,7 +12,7 @@ The SQL script files contains lots of basic statements we use to create and popu
 
 ## MySQL database backup restore process
 
-Download the files with extension .7z.00x where x=1,2,3 .
+Download the files with extension .zip.00x where x=1,2,3 .
 One way to do that is by following the directions from  https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository
 
 If that's complicated, then do as follows: 
@@ -21,7 +21,7 @@ To download from our GitHub site click on the green "Code" download button, visi
 Then download and install 7-zip utility from https://www.7-zip.org/download.html  on your machine by selecting either of the top 2 choices under 
 **Download 7-Zip 19.00 (2019-02-21) for Windows**
  
-Then extract the contents of the 7-zip archive (split in the three .7z.00x files) by right clicking on .7z.001 file, then select 7-zip and, finally, by selecting "extract  files" to point wherever you prefer to save the extracted contents on your local filesystem. 
+Then extract the contents of the 7-zip archive (split in the three .zip.00x files) by right clicking on .zip.001 file, then select 7-zip and, finally, by selecting "extract  files" to point wherever you prefer to save the extracted contents on your local filesystem. 
 
 The decompressed file should be a file with a .sql extension. That's a backup of the MySQL database with all the Kaggle site data, indexes, stored procs written to load the data and anything else that comes with them. 
 
