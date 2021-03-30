@@ -69,6 +69,8 @@ alter table daily_dataset modify energy_min FLOAT;
 alter table daily_dataset modify LCLid varchar(100);
 create index idx_daily_dataset_LCLid on daily_dataset (LCLid);
 
+alter table daily_dataset modify day datetime;
+
 # ****** acorn_details table ******** 
 
 truncate table acorn_details;
@@ -201,6 +203,24 @@ create index idx_informations_households_LCLid on informations_households (LCLid
 alter table informations_households modify Acorn varchar(100);
 create index idx_informations_households_Acorn on informations_households (Acorn);
 
+select LCLid, count(LCLid)
+from informations_households
+group by LCLid
+having count(LCLid)>1;
+
+select count(distinct LCLid)
+from informations_households;
+
+select count(*)
+from
+(
+select distinct *
+from informations_households
+) a;
+
+select count(*) 
+from informations_households;
+
 # ******** uk_bank_holidays table ********
 
 truncate table uk_bank_holidays;
@@ -262,6 +282,28 @@ create index idx_weather_daily_darksky_temperatureMaxTime on weather_daily_darks
 
 alter table weather_daily_darksky modify temperatureMinTime datetime;
 create index idx_weather_daily_darksky_temperatureMinTime on weather_daily_darksky (temperatureMinTime);
+
+alter table weather_daily_darksky modify temperatureMaxTime datetime;
+alter table weather_daily_darksky modify temperatureMinTime datetime;
+alter table weather_daily_darksky modify apparentTemperatureMinTime datetime;
+alter table weather_daily_darksky modify apparentTemperatureHighTime datetime;
+alter table weather_daily_darksky modify time datetime;
+alter table weather_daily_darksky modify sunsetTime datetime;
+alter table weather_daily_darksky modify sunriseTime datetime;
+alter table weather_daily_darksky modify temperatureHighTime datetime;
+alter table weather_daily_darksky modify temperatureLowTime datetime;
+alter table weather_daily_darksky modify apparentTemperatureMaxTime datetime;
+alter table weather_daily_darksky modify apparentTemperatureLowTime datetime;
+
+update weather_daily_darksky
+set uvIndexTime = null
+where length(trim(uvIndexTime))=0;
+
+select *
+from weather_daily_darksky
+where str_to_date(uvIndexTime, '%d,%m,%Y') is null;
+
+alter table weather_daily_darksky modify uvIndexTime timestamp;
 
 # ******** weather_hourly_darksky table ********
 
@@ -369,4 +411,22 @@ call elimNonValsInAttrb ('hhblock', 'hh_47', 'double');
 alter table hhblock modify LCLid varchar(100);
 create index idx_hhblock_LCLid on hhblock (LCLid);
 
+alter table hhblock modify day datetime;
 
+# ******** tariffs table ********
+
+truncate table tariffs;
+
+load data infile '/var/lib/mysql/Tariffs.csv'
+into table tariffs
+fields terminated by ','
+enclosed by '"'
+lines terminated by '\n'
+ignore 1 rows;
+
+select *
+from tariffs
+limit 10;
+
+alter table tariffs modify TariffDateTime datetime;
+create index idx_tarrifs_TariffDateTime on tariffs (TariffDateTime);
