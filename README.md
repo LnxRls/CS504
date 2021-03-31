@@ -25,6 +25,8 @@ Then extract the contents of the 7-zip archive (split in the three .zip.00x file
 
 The decompressed file should be a file with a .sql extension. That's a backup of the MySQL database with all the Kaggle site data, indexes, stored procs written to load the data and anything else that comes with them. 
 
+Create a database named SMIL and a user named stavros on the localhost with granted privileges in order to restore the database.
+
 To restore the database backup, you'll need to run a restore MySQL command as shown at https://phoenixnap.com/kb/how-to-backup-restore-a-mysql-database
 You can restore the backup of MySQL database on the VBox VM you already installed for the HWork, or on any other machine you prefer. 
 
