@@ -430,3 +430,20 @@ limit 10;
 
 alter table tariffs modify TariffDateTime datetime;
 create index idx_tarrifs_TariffDateTime on tariffs (TariffDateTime);
+
+
+# *************************** Analysis Section *************************
+# run below statement and take its result to run it as a separate statement to
+# add all hh_x values for each record in hhblock table
+SELECT CONCAT('SELECT ', group_concat(`COLUMN_NAME` SEPARATOR ' + '), ' FROM hhblock') 
+FROM  `INFORMATION_SCHEMA`.`COLUMNS` 
+WHERE `TABLE_SCHEMA` = (select database()) 
+AND   `TABLE_NAME`   = 'hhblock'
+AND   `COLUMN_NAME` LIKE 'hh_%';
+
+SELECT 
+LCLid, day, 
+hh_0 + hh_1 + hh_2 + hh_3 + hh_4 + hh_5 + hh_6 + hh_7 + hh_8 + hh_9 + hh_10 + hh_11 + hh_12 + hh_13 + hh_14 + hh_15 + hh_16 + hh_17 + hh_18 + hh_19 + hh_20 + hh_21 + hh_22 + hh_23 + hh_24 + hh_25 + hh_26 + hh_27 + hh_28 + hh_29 + hh_30 + hh_31 + hh_32 + hh_33 + hh_34 + hh_35 + hh_36 + hh_37 + hh_38 + hh_39 + hh_40 + hh_41 + hh_42 + hh_43 + hh_44 + hh_45 + hh_46 + hh_47
+as 
+FROM hhblock
+group by LCLid, day
