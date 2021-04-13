@@ -431,6 +431,29 @@ limit 10;
 alter table tariffs modify TariffDateTime datetime;
 create index idx_tarrifs_TariffDateTime on tariffs (TariffDateTime);
 
+update tariffs 
+set Tariff = left(Tariff,6)
+where Tariff like 'Normal%'
+
+update tariffs 
+set Tariff = left(Tariff,4)
+where Tariff like 'High%'
+
+update tariffs 
+set Tariff = left(Tariff,3)
+where Tariff like 'Low%'
+
+select Tariff, count(Tariff)
+from tariffs t 
+group by Tariff 
+
+select count(*)
+from 
+(
+select distinct Tariff ,TariffDateTime 
+from tariffs t 
+) a
+
 
 # *************************** Analysis Section *************************
 # run below statement and take its result to run it as a separate statement to
@@ -441,9 +464,458 @@ WHERE `TABLE_SCHEMA` = (select database())
 AND   `TABLE_NAME`   = 'hhblock'
 AND   `COLUMN_NAME` LIKE 'hh_%';
 
-SELECT 
-LCLid, day, 
-hh_0 + hh_1 + hh_2 + hh_3 + hh_4 + hh_5 + hh_6 + hh_7 + hh_8 + hh_9 + hh_10 + hh_11 + hh_12 + hh_13 + hh_14 + hh_15 + hh_16 + hh_17 + hh_18 + hh_19 + hh_20 + hh_21 + hh_22 + hh_23 + hh_24 + hh_25 + hh_26 + hh_27 + hh_28 + hh_29 + hh_30 + hh_31 + hh_32 + hh_33 + hh_34 + hh_35 + hh_36 + hh_37 + hh_38 + hh_39 + hh_40 + hh_41 + hh_42 + hh_43 + hh_44 + hh_45 + hh_46 + hh_47
-as 
-FROM hhblock
-group by LCLid, day
+
+select cast(dd.day as date), cast(dd.all_meter_day_energy_mean as decimal(6,4)) as all_meter_day_energy_mean, wdd.temperatureMin, wdd.temperatureMax 
+FROM 
+(
+	select day, sum(energy_sum) / sum(energy_count)  as all_meter_day_energy_mean
+	from daily_dataset
+	group by day
+) dd
+left outer join
+weather_daily_darksky wdd
+on substring(dd.day, 1, locate(' ', dd.day)) = substring(wdd.time, 1, locate(' ', wdd.time)) 
+order by day
+
+
+select *
+from SMIL.weather_daily_darksky; 
+
+
+select day, stdorToU, Acorn_grouped, sum(energy_sum) / sum(energy_count) as all_meter_day_energy_mean
+FROM 
+(
+SELECT dd.LCLid , dd.day, ih.stdorToU, ih.Acorn_grouped, energy_sum , energy_count 
+FROM daily_dataset dd 
+left outer join
+informations_households ih
+on ih.LCLid = dd.LCLid 
+) hih 
+group by day, stdorToU, Acorn_grouped 
+;
+
+
+create table daily_dataset_hhblocks
+select stdorToU, Acorn_grouped, day, sum(hh_0) as hh_0, sum(hh_1) as hh_1,  sum(hh_2) as hh_2,  sum(hh_3) as hh_3,  sum(hh_4) as hh_4,  sum(hh_5) as hh_5,  sum(hh_6) as hh_6,  sum(hh_7) as hh_7,  sum(hh_8) as hh_8,  sum(hh_9) as hh_9,  sum(hh_10) as hh_10,  sum(hh_11) as hh_11,  sum(hh_12) as hh_12,  sum(hh_13) as hh_13,  sum(hh_14) as hh_14,  sum(hh_15) as hh_15,  sum(hh_16) as hh_16,  sum(hh_17) as hh_17,  sum(hh_18) as hh_18,  sum(hh_19) as hh_19,  sum(hh_20) as hh_20,  sum(hh_21) as hh_21,  sum(hh_22) as hh_22,  sum(hh_23) as hh_23,  sum(hh_24) as hh_24,  sum(hh_25) as hh_25,  sum(hh_26) as hh_26,  sum(hh_27) as hh_27,  sum(hh_28) as hh_28,  sum(hh_29) as hh_29,  sum(hh_30) as hh_30,  sum(hh_31) as hh_31,  sum(hh_32) as hh_32,  sum(hh_33) as hh_33,  sum(hh_34) as hh_34,  sum(hh_35) as hh_35,  sum(hh_36) as hh_36,  sum(hh_37) as hh_37,  sum(hh_38) as hh_38,  sum(hh_39) as hh_39,  sum(hh_40) as hh_40,  sum(hh_41) as hh_41,  sum(hh_42) as hh_42,  sum(hh_43) as hh_43,  sum(hh_44) as hh_44,  sum(hh_45) as hh_45,  sum(hh_46) as hh_46,  sum(hh_47) as hh_47
+FROM 
+(
+select ih.Acorn_grouped , ih.stdorToU, h2.* 
+from hhblock h2 
+left outer join
+informations_households ih
+on h2.LCLid  = ih.LCLid
+) a
+group by stdorToU , Acorn_grouped,day  
+
+
+
+select *
+from daily_dataset_hhblocks
+limit 10;
+
+
+call ctreLongUnion('daily_dataset_hhblocks_transp', 'daily_dataset_hhblocks', 'day', 'hh', 'hhblock', 48)
+
+
+create table daily_dataset_hhblocks_transp 
+select  stdorToU, Acorn_grouped, day, hh_0 + hh_1, '01:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_2 + hh_3, '02:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_4 + hh_5, '03:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_6 + hh_7, '04:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_8 + hh_9, '05:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_10 + hh_11, '06:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_12 + hh_13, '07:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_14 + hh_15, '08:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_16 + hh_17, '09:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_18 + hh_19, '10:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_20 + hh_21, '11:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_22 + hh_23, '12:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_24 + hh_25, '13:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_26 + hh_27, '14:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_28 + hh_29, '15:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_30 + hh_31, '16:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_32 + hh_33, '17:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_34 + hh_35, '18:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_36 + hh_37, '19:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_38 + hh_39, '20:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_40 + hh_41, '21:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_42 + hh_43, '22:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_44 + hh_45, '23:00:00' as hhblock FROM daily_dataset_hhblocks UNION
+select  stdorToU, Acorn_grouped, day, hh_46 + hh_47, '00:00:00' as hhblock FROM daily_dataset_hhblocks 
+
+
+select * 
+from SMIL.weather_daily_darksky
+limit 100;
+
+
+select precipType , count(*) as cnt
+from SMIL.weather_hourly_darksky
+group by precipType 
+  
+
+select precipType 
+from SMIL.weather_hourly_darksky
+limit 200;
+
+select *
+from daily_dataset dd 
+limit 10;
+
+select distinct stdorToU ,Acorn ,Acorn_grouped 
+from informations_households adt 
+limit 10 ;
+
+
+# avg(hh_0) as hh_0, avg(hh_1) as hh_1,  avg(hh_2) as hh_2,  avg(hh_3) as hh_3,  avg(hh_4) as hh_4,  avg(hh_5) as hh_5,  avg(hh_6) as hh_6,  avg(hh_7) as hh_7,  avg(hh_8) as hh_8,  avg(hh_9) as hh_9,  avg(hh_10) as hh_10,  avg(hh_11) as hh_11,  avg(hh_12) as hh_12,  avg(hh_13) as hh_13,  avg(hh_14) as hh_14,  avg(hh_15) as hh_15,  avg(hh_16) as hh_16,  avg(hh_17) as hh_17,  avg(hh_18) as hh_18,  avg(hh_19) as hh_19,  avg(hh_20) as hh_20,  avg(hh_21) as hh_21,  avg(hh_22) as hh_22,  avg(hh_23) as hh_23,  avg(hh_24) as hh_24,  avg(hh_25) as hh_25,  avg(hh_26) as hh_26,  avg(hh_27) as hh_27,  avg(hh_28) as hh_28,  avg(hh_29) as hh_29,  avg(hh_30) as hh_30,  avg(hh_31) as hh_31,  avg(hh_32) as hh_32,  avg(hh_33) as hh_33,  avg(hh_34) as hh_34,  avg(hh_35) as hh_35,  avg(hh_36) as hh_36,  avg(hh_37) as hh_37,  avg(hh_38) as hh_38,  avg(hh_39) as hh_39,  avg(hh_40) as hh_40,  avg(hh_41) as hh_41,  avg(hh_42) as hh_42,  avg(hh_43) as hh_43,  avg(hh_44) as hh_44,  avg(hh_45) as hh_45,  avg(hh_46) as hh_46,  avg(hh_47) as hh_47
+
+
+
+create table daily_dataset_hhblocks_byACORN
+select stdorToU, Acorn_grouped,  avg(hh_0+hh_1) as h_1,  avg(hh_2+hh_3) as h_2,  avg(hh_4+hh_5) as h_3,  avg(hh_6+hh_7) as h_4,  avg(hh_8+hh_9) as h_5,  avg(hh_10+hh_11) as h_6,  avg(hh_12+hh_13) as h_7,  avg(hh_14+hh_15) as h_8,  avg(hh_16+hh_17) as h_9,  avg(hh_18+hh_19) as h_10,  avg(hh_20+hh_21) as h_11,  avg(hh_22+hh_23) as h_12,  avg(hh_24+hh_25) as h_13,  avg(hh_26+hh_27) as h_14,  avg(hh_28+hh_29) as h_15,  avg(hh_30+hh_31) as h_16,  avg(hh_32+hh_33) as h_17,  avg(hh_34+hh_35) as h_18,  avg(hh_36+hh_37) as h_19,  avg(hh_38+hh_39) as h_20,  avg(hh_40+hh_41) as h_21,  avg(hh_42+hh_43) as h_22,  avg(hh_44+hh_45) as h_23,  avg(hh_46+hh_47) as h_24
+FROM 
+(
+select ih.Acorn_grouped , ih.stdorToU, h2.day, hh_0, hh_1, hh_2, hh_3, hh_4, hh_5, hh_6, hh_7, hh_8, hh_9, hh_10, hh_11, hh_12, hh_13, hh_14, hh_15, hh_16, hh_17, hh_18, hh_19, hh_20, hh_21, hh_22, hh_23, hh_24, hh_25, hh_26, hh_27, hh_28, hh_29, hh_30, hh_31, hh_32, hh_33, hh_34, hh_35, hh_36, hh_37, hh_38, hh_39, hh_40, hh_41, hh_42, hh_43, hh_44, hh_45, hh_46, hh_47 
+from hhblock h2 
+left outer join
+informations_households ih
+on h2.LCLid  = ih.LCLid
+) a
+group by stdorToU, Acorn_grouped
+
+
+select *
+from daily_dataset_hhblocks_byACORN
+limit 10;
+
+
+create table daily_dataset_hhblocks_byACORN_transp 
+select  stdorToU, Acorn_grouped,  h_1, '01:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_2, '02:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_3, '03:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_4, '04:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_5, '05:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_6, '06:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_7, '07:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_8, '08:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_9, '09:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_10, '10:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_11, '11:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_12, '12:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_13, '13:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_14, '14:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_15, '15:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_16, '16:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_17, '17:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_18, '18:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_19, '19:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_20, '20:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_21, '21:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_22, '22:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_23, '23:00:00' as hblock FROM daily_dataset_hhblocks_byACORN UNION
+select  stdorToU, Acorn_grouped,  h_24, '00:00:00' as hblock FROM daily_dataset_hhblocks_byACORN
+
+
+
+select *
+from daily_dataset_hhblocks_byACORN_transp
+order by stdorToU, Acorn_grouped
+limit 10;
+
+
+
+
+create table daily_dataset_hhblocks_byACORNAndHour
+select stdorToU, Acorn_grouped, day,  avg(hh_0+hh_1) as h_1,  avg(hh_2+hh_3) as h_2,  avg(hh_4+hh_5) as h_3,  avg(hh_6+hh_7) as h_4,  avg(hh_8+hh_9) as h_5,  avg(hh_10+hh_11) as h_6,  avg(hh_12+hh_13) as h_7,  avg(hh_14+hh_15) as h_8,  avg(hh_16+hh_17) as h_9,  avg(hh_18+hh_19) as h_10,  avg(hh_20+hh_21) as h_11,  avg(hh_22+hh_23) as h_12,  avg(hh_24+hh_25) as h_13,  avg(hh_26+hh_27) as h_14,  avg(hh_28+hh_29) as h_15,  avg(hh_30+hh_31) as h_16,  avg(hh_32+hh_33) as h_17,  avg(hh_34+hh_35) as h_18,  avg(hh_36+hh_37) as h_19,  avg(hh_38+hh_39) as h_20,  avg(hh_40+hh_41) as h_21,  avg(hh_42+hh_43) as h_22,  avg(hh_44+hh_45) as h_23,  avg(hh_46+hh_47) as h_24
+FROM 
+(
+select ih.Acorn_grouped , ih.stdorToU, h2.day, hh_0, hh_1, hh_2, hh_3, hh_4, hh_5, hh_6, hh_7, hh_8, hh_9, hh_10, hh_11, hh_12, hh_13, hh_14, hh_15, hh_16, hh_17, hh_18, hh_19, hh_20, hh_21, hh_22, hh_23, hh_24, hh_25, hh_26, hh_27, hh_28, hh_29, hh_30, hh_31, hh_32, hh_33, hh_34, hh_35, hh_36, hh_37, hh_38, hh_39, hh_40, hh_41, hh_42, hh_43, hh_44, hh_45, hh_46, hh_47 
+from hhblock h2 
+left outer join
+informations_households ih
+on h2.LCLid  = ih.LCLid
+) a
+group by stdorToU, Acorn_grouped, day
+
+
+
+create table daily_dataset_hblocks_byACORNAndHour_transp 
+select  stdorToU, Acorn_grouped, day,  h_1, '01:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_2, '02:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_3, '03:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_4, '04:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_5, '05:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_6, '06:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_7, '07:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_8, '08:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_9, '09:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_10, '10:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_11, '11:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_12, '12:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_13, '13:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_14, '14:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_15, '15:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_16, '16:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_17, '17:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_18, '18:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_19, '19:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_20, '20:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_21, '21:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_22, '22:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_23, '23:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour UNION
+select  stdorToU, Acorn_grouped, day,  h_24, '00:00:00' as hblock FROM daily_dataset_hblocks_byACORNAndHour
+
+
+
+create table SMIL.daily_dataset_hhblocks_byHour
+select day, (hh_0+ hh_1+ hh_2+ hh_3+ hh_4+ hh_5+ hh_6+ hh_7+ hh_8+ hh_9+ hh_10+ hh_11+ hh_12+ hh_13+ hh_14+ hh_15+ hh_16+ hh_17+ hh_18+ hh_19+ hh_20+ hh_21+ hh_22+ hh_23+ hh_24+ hh_25+ hh_26+ hh_27+ hh_28+ hh_29+ hh_30+ hh_31+ hh_32+ hh_33+ hh_34+ hh_35+ hh_36+ hh_37+ hh_38+ hh_39+ hh_40+ hh_41+ hh_42+ hh_43+ hh_44+ hh_45+ hh_46+ hh_47) / NumbSmrtMetrs / 24 as Avg_Energy_Consump
+from (
+select h.day, count(LCLid) as NumbSmrtMetrs, sum(hh_0) as hh_0, sum(hh_1) as hh_1,  sum(hh_2) as hh_2,  sum(hh_3) as hh_3,  sum(hh_4) as hh_4,  sum(hh_5) as hh_5,  sum(hh_6) as hh_6,  sum(hh_7) as hh_7,  sum(hh_8) as hh_8,  sum(hh_9) as hh_9,  sum(hh_10) as hh_10,  sum(hh_11) as hh_11,  sum(hh_12) as hh_12,  sum(hh_13) as hh_13,  sum(hh_14) as hh_14,  sum(hh_15) as hh_15,  sum(hh_16) as hh_16,  sum(hh_17) as hh_17,  sum(hh_18) as hh_18,  sum(hh_19) as hh_19,  sum(hh_20) as hh_20,  sum(hh_21) as hh_21,  sum(hh_22) as hh_22,  sum(hh_23) as hh_23,  sum(hh_24) as hh_24,  sum(hh_25) as hh_25,  sum(hh_26) as hh_26,  sum(hh_27) as hh_27,  sum(hh_28) as hh_28,  sum(hh_29) as hh_29,  sum(hh_30) as hh_30,  sum(hh_31) as hh_31,  sum(hh_32) as hh_32,  sum(hh_33) as hh_33,  sum(hh_34) as hh_34,  sum(hh_35) as hh_35,  sum(hh_36) as hh_36,  sum(hh_37) as hh_37,  sum(hh_38) as hh_38,  sum(hh_39) as hh_39,  sum(hh_40) as hh_40,  sum(hh_41) as hh_41,  sum(hh_42) as hh_42,  sum(hh_43) as hh_43,  sum(hh_44) as hh_44,  sum(hh_45) as hh_45,  sum(hh_46) as hh_46,  sum(hh_47) as hh_47
+from hhblock h 
+group by h.day 
+) f
+
+
+
+select *
+from acorn_details_transp adt 
+limit 10;
+
+select count(*)
+FROM (
+select distinct *
+from informations_households ih 
+) a
+
+
+select count(*)
+from informations_households ih 
+
+select *
+from informations_households ih 
+limit 10;
+
+
+
+####### scripts to bring relations closer to 3NF  #####################
+
+
+
+CREATE TABLE SMIL.AllAcornGroups (ACORN_ID int, Acorn varchar(20));
+
+insert into SMIL.AllAcornGroups (ACORN_ID, Acorn)
+Values(1, 'ACORN-'),
+(2, 'ACORN-A'),
+(3, 'ACORN-B'),
+(4, 'ACORN-C'),
+(5, 'ACORN-D'),
+(6, 'ACORN-E'),
+(7, 'ACORN-F'),
+(8, 'ACORN-G'),
+(9, 'ACORN-H'),
+(10, 'ACORN-I'),
+(11, 'ACORN-J'),
+(12, 'ACORN-K'),
+(13, 'ACORN-L'),
+(14, 'ACORN-M'),
+(15, 'ACORN-N'),
+(16, 'ACORN-O'),
+(17, 'ACORN-P'),
+(18, 'ACORN-Q'),
+(19, 'ACORN-U')
+
+
+
+select *
+from SMIL.AllAcornGroups ih ;
+
+
+create table SMIL.informations_households_revamped
+select *
+from SMIL.informations_households
+
+
+create table info_hous_Acorn
+select LCLid, aag.ACORN_ID from SMIL.informations_households_revamped ih
+left outer join SMIL.AllAcornGroups aag 
+on ih.Acorn = aag.Acorn 
+
+
+select *
+from info_hous_Acorn
+limit 10;
+
+
+select ihr.LCLid , ihr.stdorToU ,ihr.Acorn_grouped ,ihr.file , aag.Acorn
+from informations_households_revamped ihr
+inner join 
+info_hous_Acorn rv
+on ihr.LCLid = rv.LCLid 
+inner join AllAcornGroups aag
+on rv.ACORN_ID = aag.ACORN_ID 
+limit 10 ;
+
+
+alter table SMIL.informations_households_revamped
+drop column Acorn
+
+
+
+select *
+from informations_households_revamped ihr 
+limit 10;
+
+
+
+select *
+from SMIL.acorn_details_transp ihr 
+limit 10;
+
+
+select count(*)
+from (
+select distinct LCLid 
+from hhblock
+) a
+
+
+select  dd.LCLid 
+from (select distinct LCLid from hhblock)  hh
+right outer join ( select distinct LCLid  from daily_dataset) dd 
+on hh.LCLid = dd.LCLid 
+where hh.LCLid is null
+
+
+select lclid, count(LCLid) as cntL  
+from daily_dataset
+group by LCLid
+having count(LCLid) < 10
+
+
+
+select lclid, count(LCLid) as cntL  
+from hhblock
+group by LCLid
+having count(LCLid) <2
+
+
+select count(*)
+from (
+select distinct LCLid 
+from daily_dataset
+) a
+
+
+# 3,510,433
+select count(*)
+from daily_dataset
+
+
+
+# 3,510,433
+select count(*)
+from (
+select distinct LCLid, day 
+from daily_dataset
+) a
+
+
+# 3,469,352
+select count(*)
+from (
+select distinct LCLid, day 
+from hhblock h2 
+) a
+
+
+# 3,469,352
+select count(*)
+from  hhblock
+
+
+create table AllDates
+select distinct day as dayDate
+from daily_dataset dd 
+order by `day`
+
+
+
+
+######  more analysis scripts  ######
+
+select  ddhh.*, ta.Tariff
+from
+(
+select stdorToU , Acorn_grouped , Avg_Energy_Consump, substr(day, 1, locate(' ', day)) as dayDate, hhblock
+from 
+daily_dataset_hhblocks_byACORNAndHour_transp 
+) ddhh
+left outer join
+(
+select Tariff, substr(t.TariffDateTime, 1, locate' ', t.TariffDateTime)) as tariffDate,
+Trim(substr(t.TariffDateTime, locate(" ", t.TariffDateTime), length(cast(t.TariffDateTime as char(30))))) as tariffTime
+from
+tariffs t
+where right(t.TariffDateTime, 5) = '00:00'
+) ta
+on 
+ddhh.dayDate = ta.tariffDate
+AND 
+ddhh.hhblock = ta.tariffTime
+;
+
+
+
+select Acorn_grouped, Tariff, sum(energy_sum)/sum(energy_count) as Avg_Energy_Consump
+from (
+    select distinct a.LCLid, a.dayDate, ih.stdorToU , ih.Acorn_grouped, c.Tariff, energy_median, energy_mean, energy_max, energy_count, energy_std, energy_sum, energy_min
+    from 
+    (
+        select dd.*, substr(day, 1, locate(' ', day)) as dayDate
+        from daily_dataset dd
+    ) a
+    left outer join
+    SMIL.informations_households ih
+    on a.LCLid = ih.LCLid 
+    left outer join 
+    (
+    select *, substr(t.TariffDateTime, 1, locate(' ', t.TariffDateTime)) as tariffDate
+    from tariffs t 
+    ) c
+    on a.dayDate = c.TariffDate
+) d
+where (stdorToU = 'std') and (Tariff != 'NA')
+group by Acorn_grouped, Tariff
+;
+
+
+select *
+from SMIL.daily_dataset_hhblocks_byACORN
+limit 10;
+
+
+###### time series predictive #####
+
+select dayDate, stdorToU, Tariff, Acorn_grouped, sum(energy_sum)/sum(energy_count) as Avg_Energy_Consump
+from (
+    select distinct a.dayDate, a.LCLid, energy_count, energy_sum, stdorToU, Acorn_grouped, Tariff
+    from 
+    (
+        select substr(day, 1, locate(' ', day)) as dayDate, dd.LCLid, dd.energy_sum, dd.energy_count
+        from daily_dataset dd
+    ) a
+    inner join
+    (
+	    select LCLid, stdorToU, Acorn_grouped 
+		from SMIL.informations_households 
+    ) ih
+    on a.LCLid = ih.LCLid 
+    inner join 
+    (
+	    select distinct substr(t.TariffDateTime, 1, locate(' ', t.TariffDateTime)) as tariffDate, Tariff
+	    from tariffs t 
+    ) c
+    on a.dayDate = c.TariffDate
+) d
+group by dayDate, stdorToU, Tariff, Acorn_grouped
+order by dayDate, stdorToU, Tariff, Acorn_grouped
