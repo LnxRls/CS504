@@ -8,7 +8,6 @@ library(plm)
 library(tidyverse)
 library(rstatix)
 library(coin)
-library(binaryLogic)
 library(lubridate)
 library(RMariaDB)
 
@@ -46,8 +45,8 @@ class(hhblocks)
 
 
 # import the tariffs table
-tariffs <- read.csv('Tariffs_table.csv')
-str(tariffs)
+
+
 
 # import the daily dataset table
 dd <- dbGetQuery(dbConn, "select * from daily_dataset; ")
@@ -56,18 +55,13 @@ typeof(dd)
 str(dd)
 dd$day <- ymd(dd$day)
 str(dd$day)
-#dd$energy_median <- as.numeric(dd$energy_median)
-#dd$energy_mean <- as.numeric(dd$energy_mean)
-#dd$energy_max <- as.numeric(dd$energy_max)
-#dd$energy_min <- as.numeric(dd$energy_min)
-#dd$energy_std <- as.numeric(dd$energy_std)
-#dd$energy_sum <- as.numeric(dd$energy_sum)
 str(dd)
 
 
 # import the household information table
-h <- read.csv('Household_information_table.csv')
-str(h)
+hi <- dbGetQuery(dbConn, "SELECT * FROM informations_households; ")
+
+str(hi)
 
 
 
@@ -76,6 +70,7 @@ str(h)
 dd_hi <- dbGetQuery(dbConn, "SELECT * FROM daily_dataset
 LEFT JOIN informations_households 
 ON daily_dataset.LCLid = informations_households.LCLid; ")
+
 str(dd_hi)
 
 # change the datetime column to a date column
@@ -135,6 +130,24 @@ categories2 <- unique(dd_hi$Acorn)
 categories2
 categories3 <- unique(dd_hi$file)
 categories3
+
+
+
+dd_hi_ToU <- dbGetQuery(dbConn, "SELECT * FROM daily_dataset
+LEFT JOIN informations_households ON daily_dataset.LCLid = informations_households.LCLid
+WHERE informations_households.stdorToU = 'ToU' AND energy_sum IS NOT NULL; ")
+
+median(dd_hi_ToU$energy_sum)
+class(dd_hi_ToU)
+median(dd_hi_ToU$energy_max)
+
+
+dd_hi_std <- dbGetQuery(dbConn, "SELECT * FROM daily_dataset
+LEFT JOIN informations_households ON daily_dataset.LCLid = informations_households.LCLid
+WHERE informations_households.stdorToU = 'Std' AND energy_sum IS NOT NULL; ")
+
+median(dd_hi_std$energy_sum)
+median(dd_hi_std$energy_max)
 
 
 
@@ -215,21 +228,53 @@ dd_hi %>% wilcox_effsize(energy_sum ~ stdorToU, paired = FALSE,
 
 
 
-# estimate a fixed effects regression of time of use with plm()
-Acorn <- dd_hi$Acorn
-Status <- dd_hi$Acorn_grouped
-file <- dd_hi$file
-entity_FEs <- c(Acorn, Status, file)
-str(entity_FEs)
+# estimate a fixed effects regression of the impacts of time of use
+# energy pricing on total daily energy use with plm()
+# Status <- cbind(Affluent_dummy, Comfortable_dummy, Adversity_dummy, AcornU_dummy)
+# Acorn <- cbind(AcornA_dummy, AcornB_dummy, AcornC_dummy, AcornD_dummy, AcornE_dummy,
+# AcornF_dummy, AcornG_dummy, AcornH_dummy, AcornI_dummy, AcornJ_dummy, AcornK_dummy,
+# AcornL_dummy, AcornM_dummy, AcornN_dummy, AcornO_dummy, AcornP_dummy, AcornQ_dummy)
+# file <- dd_hi$file
+# entity_FEs <- cbind(Status, Acorn)
+# str(entity_FEs)
+# head(entity_FEs)
 
-ToU_FE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
+attach(dd_hi)
+Total_Energy_FE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
                   Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                   + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                   + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                   + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                   + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
-              data = dd_hi, index = "day", model = "within")
-summary(ToU_FE)
+                   data = dd_hi, model = "within", index = "day")
+summary(Total_Energy_FE)
+
+Total_Energy_RE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
+                  Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
+              + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
+              + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
+              data = dd_hi, model = "random", index = c("LCLid", "day"))
+summary(Total_Energy_RE)
+
+
+
+EnergyMax_FE <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
+                        Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
+                    + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
+                    + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
+                    + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
+                    + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
+                    data = dd_hi, model = "within", index = "day")
+summary(EnergyMax_FE)
+
+EnergyMax_RE <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
+                         Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
+                     + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
+                     + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
+                     + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
+                     + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
+                     data = dd_hi, model = "random", index = c("LCLid", "day"))
+summary(EnergyMax_RE)
 
 
 # estimate a random effects regression model
