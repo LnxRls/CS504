@@ -21,7 +21,7 @@ dbListTables(dbConn)
 
 
 # import the half hourly table 
-hhblocks <- dbGetQuery(dbConn, 
+hhblocks_sum <- dbGetQuery(dbConn, 
                        "
 select hh1.day, hh2.numbSmMtrs, hh_0, hh_1, hh_2, hh_3, hh_4, hh_5, hh_6, hh_7, hh_8, hh_9, hh_10, hh_11, hh_12, hh_13, hh_14, hh_15, hh_16, hh_17, hh_18, hh_19, hh_20, hh_21, hh_22, hh_23, hh_24, hh_25, hh_26, hh_27, hh_28, hh_29, hh_30, hh_31, hh_32, hh_33, hh_34, hh_35, hh_36, hh_37, hh_38, hh_39, hh_40, hh_41, hh_42, hh_43, hh_44, hh_45, hh_46, hh_47
 from 
@@ -38,8 +38,11 @@ left outer join
 ) as hh2
 on hh1.day = hh2.day;")
 
-head(hhblocks)
-class(hhblocks)
+head(hhblocks_sum)
+tail(hhblocks_sum)
+class(hhblocks_sum)
+typeof(hhblocks_sum)
+str(hhblocks_sum)
 
     
     
@@ -50,7 +53,12 @@ qqplot(dd_hi$energy_sum[dd_hi$ToU_dummy == 1],
        dd_hi$energy_sum[dd_hi$ToU_dummy == 0],
        xlab = 'Houses on Dynamic Time of Use Energy Rate',
        ylab = 'Houses on the Standard Flat Energy Rate',
-       main = 'Q-Q Plot of Total Daily Energy Usage vs Time of Use Pricing') 
+       main = 'Q-Q Plot of Total Daily Energy Usage vs Time of Use Pricing')
+
+
+qqnorm(dd_hi$energy_sum, main = 'Q-Q Plot of the Observed Distribution of energy_sum vs a Gaussian Distribution')
+qqline(dd_hi$energy_sum)
+
 
 #create a Q-Q plot of the distribution of the energy_sum column in the 
 # daily_dataset table for houses on time of use pricing 
