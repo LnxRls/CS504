@@ -43,8 +43,8 @@ str(hi)
 # import a left join of the daily dataset and household
 # information tables into RStudio as a data frame
 dd_hi <- dbGetQuery(dbConn, "SELECT * FROM daily_dataset
-LEFT JOIN informations_households 
-ON daily_dataset.LCLid = informations_households.LCLid; ")
+LEFT JOIN informations_households ON daily_dataset.LCLid = informations_households.LCLid
+WHERE day BETWEEN '2013-01-01' AND '2013-12-31'; ")
 
 str(dd_hi)
 
@@ -150,10 +150,10 @@ kurtosis(dd_hi_Std$energy_max)
 # much more variation than a Gaussian distribution
 attach(dd_hi)
 wilcox.test(energy_sum ~ stdorToU, mu = 0, alternative = "greater", 
-            conf.int = T, paired = FALSE)
+            conf.int = TRUE, paired = FALSE)
 
 wilcox.test(energy_sum ~ stdorToU, mu = 0, alternative = "less", 
-            conf.int = TRUE, paired = F)
+            conf.int = TRUE, paired = FALSE)
 
 # calculate the Wilcoxon effect size of the difference
 dd_hi %>% wilcox_effsize(energy_sum ~ stdorToU, paired = FALSE,
@@ -193,7 +193,7 @@ head(dd_hi2)
 str(dd_hi2)
 attach(dd_hi2)
 Total_Energy_FE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                  Adversity_dummy + AcornA_dummy + AcornB_dummy 
+                  Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                   + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                   + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                   + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
@@ -203,7 +203,7 @@ summary(Total_Energy_FE)
 
 
 Total_Energy_FE2 <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                            Adversity_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
+                            Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                         + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                         + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
                         data = dd_hi2, model = "within", index = c("id", "day"))
@@ -213,7 +213,7 @@ summary(TTotal_Energy_FE2)
 
 
 Total_Energy_RE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                           Adversity_dummy + AcornA_dummy + AcornB_dummy 
+                           Adversity_dummy  + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                        + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                        + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                        + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
@@ -225,7 +225,7 @@ summary(Total_Energy_RE)
 
 
 Total_Energy_RE2 <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                           Adversity_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
+                           Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                        + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                        + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
                        data = dd_hi2, model = "random", index = c("id", "day"))
@@ -242,7 +242,7 @@ phtest(Total_Energy_FE, Total_Energy_RE)
 
 # fun an FE and a RE on the data but with energy_max as the dependent variable 
 EnergyMax_FE <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                        Adversity_dummy + AcornA_dummy + AcornB_dummy 
+                        Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                     + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                     + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                     + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
@@ -257,7 +257,7 @@ rm(Total_Energy_FE)
 attach(dd_hi2)
 
 EnergyMax_RE <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + 
-                  Comfortable_dummy + Adversity_dummy + 
+                  Comfortable_dummy + Adversity_dummy + AcornU_dummy + 
                   AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy +
                   AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy +
                   AcornI_dummy + AcornJ_dummy + AcornK_dummy + AcornL_dummy +
@@ -268,7 +268,7 @@ summary(EnergyMax_RE)
 
 
 EnergyMax_RE2 <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                        Adversity_dummy + AcornA_dummy + AcornB_dummy 
+                        Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                     + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                     + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                     + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
