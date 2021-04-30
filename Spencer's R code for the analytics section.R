@@ -41,7 +41,8 @@ str(hi)
 
 
 # import a left join of the daily dataset and household
-# information tables into RStudio as a data frame
+# information tables with only records during 2013 included
+# into RStudio as a data frame
 dd_hi <- dbGetQuery(dbConn, "SELECT * FROM daily_dataset
 LEFT JOIN informations_households ON daily_dataset.LCLid = informations_households.LCLid
 WHERE day BETWEEN '2013-01-01' AND '2013-12-31'; ")
@@ -53,7 +54,11 @@ dd_hi$day <- ymd(dd_hi$day)
 
 # add a numerical ID column
 dd_hi$id <- substr(dd_hi$LCLid, 4, 9)
-dd_hi$id
+dd_hi$id <- as.integer(dd_hi$id)
+
+# convert the stdorToU variable/column which is currently a 
+# chr variable to a factor
+dd_hi$stdorToU <- as.factor(dd_hi$stdorToU)
 
 # add a dummy variable column for time of use houses
 dd_hi$ToU_dummy <- ifelse(dd_hi$stdorToU == "ToU", 1, 0)
@@ -67,40 +72,35 @@ dd_hi$Adversity_dummy <- ifelse(dd_hi$Acorn_grouped == "Adversity", 1, 0)
 # add a dummy variable for households in the Acorn group "Acorn-U"
 dd_hi$AcornU_dummy <- ifelse(dd_hi$Acorn_grouped == "ACORN-U", 1, 0)
 
-# add a dummy variable for households in the Acorn-E
-dd_hi$AcornE_dummy <- ifelse(dd_hi$Acorn == "ACORN-E", 1, 0)
-# add a dummy variable for households in the Acorn-N
-dd_hi$AcornN_dummy <- ifelse(dd_hi$Acorn == "ACORN-N", 1, 0)
-# add a dummy variable for households in the Acorn-H
-dd_hi$AcornH_dummy <- ifelse(dd_hi$Acorn == "ACORN-H", 1, 0)
-# add a dummy variable for households in the Acorn-P
-dd_hi$AcornP_dummy <- ifelse(dd_hi$Acorn == "ACORN-P", 1, 0)
-# add a dummy variable for households in the Acorn-F
-dd_hi$AcornF_dummy <- ifelse(dd_hi$Acorn == "ACORN-F", 1, 0)
-# add a dummy variable for households in the Acorn-K
-dd_hi$AcornK_dummy <- ifelse(dd_hi$Acorn == "ACORN-K", 1, 0)
-# add a dummy variable for households in the Acorn-Q
-dd_hi$AcornQ_dummy <- ifelse(dd_hi$Acorn == "ACORN-Q", 1, 0)
-# add a dummy variable for households in the Acorn-I
-dd_hi$AcornI_dummy <- ifelse(dd_hi$Acorn == "ACORN-I", 1, 0)
-# add a dummy variable for households in the Acorn-L
-dd_hi$AcornL_dummy <- ifelse(dd_hi$Acorn == "ACORN-L", 1, 0)
-# add a dummy variable for households in the Acorn-D
-dd_hi$AcornD_dummy <- ifelse(dd_hi$Acorn == "ACORN-D", 1, 0)
-# add a dummy variable for households in the Acorn-J
-dd_hi$AcornJ_dummy <- ifelse(dd_hi$Acorn == "ACORN-J", 1, 0)
-# add a dummy variable for households in the Acorn-O
-dd_hi$AcornO_dummy <- ifelse(dd_hi$Acorn == "ACORN-O", 1, 0)
 # add a dummy variable for households in the Acorn-A
 dd_hi$AcornA_dummy <- ifelse(dd_hi$Acorn == "ACORN-A", 1, 0)
 # add a dummy variable for households in the Acorn-B
 dd_hi$AcornB_dummy <- ifelse(dd_hi$Acorn == "ACORN-B", 1, 0)
 # add a dummy variable for households in the Acorn-C
 dd_hi$AcornC_dummy <- ifelse(dd_hi$Acorn == "ACORN-C", 1, 0)
-# add a dummy variable for households in the Acorn-M
-dd_hi$AcornM_dummy <- ifelse(dd_hi$Acorn == "ACORN-M", 1, 0)
+# add a dummy variable for households in the Acorn-D
+dd_hi$AcornD_dummy <- ifelse(dd_hi$Acorn == "ACORN-D", 1, 0)
+# add a dummy variable for households in the Acorn-E
+dd_hi$AcornE_dummy <- ifelse(dd_hi$Acorn == "ACORN-E", 1, 0)
+# add a dummy variable for households in the Acorn-F
+dd_hi$AcornF_dummy <- ifelse(dd_hi$Acorn == "ACORN-F", 1, 0)
 # add a dummy variable for households in the Acorn-G
 dd_hi$AcornG_dummy <- ifelse(dd_hi$Acorn == "ACORN-G", 1, 0)
+# add a dummy variable for households in the Acorn-H
+dd_hi$AcornH_dummy <- ifelse(dd_hi$Acorn == "ACORN-H", 1, 0)
+dd_hi$AcornI_dummy <- ifelse(dd_hi$Acorn == "ACORN-I", 1, 0)
+dd_hi$AcornJ_dummy <- ifelse(dd_hi$Acorn == "ACORN-J", 1, 0)
+dd_hi$AcornK_dummy <- ifelse(dd_hi$Acorn == "ACORN-K", 1, 0)
+dd_hi$AcornL_dummy <- ifelse(dd_hi$Acorn == "ACORN-L", 1, 0)
+dd_hi$AcornM_dummy <- ifelse(dd_hi$Acorn == "ACORN-M", 1, 0)
+dd_hi$AcornN_dummy <- ifelse(dd_hi$Acorn == "ACORN-N", 1, 0)
+# add a dummy variable for households in the Acorn-O
+dd_hi$AcornO_dummy <- ifelse(dd_hi$Acorn == "ACORN-O", 1, 0)
+# add a dummy variable for households in the Acorn-P
+dd_hi$AcornP_dummy <- ifelse(dd_hi$Acorn == "ACORN-P", 1, 0)
+# add a dummy variable for households in the Acorn-Q
+dd_hi$AcornQ_dummy <- ifelse(dd_hi$Acorn == "ACORN-Q", 1, 0)
+
 
 str(dd_hi)
 categories <- unique(dd_hi$Acorn_grouped) 
@@ -109,15 +109,20 @@ categories2 <- unique(dd_hi$Acorn)
 categories2
 categories3 <- unique(dd_hi$file)
 categories3
-
+length(categories3)
+categories4 <- unique(dd_hi$id)
+categories4
+length(categories4)
 
 
 
 
 dd_hi_ToU <- dbGetQuery(dbConn, "SELECT * FROM daily_dataset
 LEFT JOIN informations_households ON daily_dataset.LCLid = informations_households.LCLid
-WHERE informations_households.stdorToU = 'ToU' AND energy_sum IS NOT NULL; ")
+WHERE day BETWEEN '2013-01-01' AND '2013-12-31' AND 
+informations_households.stdorToU = 'ToU' AND energy_sum IS NOT NULL; ")
 class(dd_hi_ToU)
+str(dd_hi_ToU)
 
 median(dd_hi_ToU$energy_sum)
 median(dd_hi_ToU$energy_max)
@@ -128,17 +133,15 @@ kurtosis(dd_hi_ToU$energy_max)
 
 dd_hi_Std <- dbGetQuery(dbConn, "SELECT * FROM daily_dataset
 LEFT JOIN informations_households ON daily_dataset.LCLid = informations_households.LCLid
-WHERE informations_households.stdorToU = 'Std' AND energy_sum IS NOT NULL; ")
+WHERE day BETWEEN '2013-01-01' AND '2013-12-31' AND 
+informations_households.stdorToU = 'Std' AND energy_sum IS NOT NULL; ")
 class(dd_hi_Std)
+str(dd_hi_Std)
 
 median(dd_hi_Std$energy_sum)
 median(dd_hi_Std$energy_max)
 kurtosis(dd_hi_Std$energy_sum)
 kurtosis(dd_hi_Std$energy_max)
-
-
-
-
 
 
 
@@ -188,17 +191,17 @@ dd_hi %>% wilcox_effsize(energy_max ~ stdorToU, paired = FALSE,
 # str(entity_FEs)
 # head(entity_FEs)
 
-dd_hi2 <- dd_hi[, c(2:9, 12:37)]
-head(dd_hi2)
-str(dd_hi2)
-attach(dd_hi2)
+dd_hi_FE <- dd_hi[, c(2:9, 12:37)]
+head(dd_hi_FE)
+str(dd_hi_FE)
+attach(dd_hi_FE)
 Total_Energy_FE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
                   Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                   + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                   + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                   + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                   + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
-                   data = dd_hi2, model = "within", index = "day")
+                   data = dd_hi_FE, model = "within", index = "day")
 summary(Total_Energy_FE)
 
 
@@ -206,7 +209,7 @@ Total_Energy_FE2 <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comf
                             Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                         + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                         + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
-                        data = dd_hi2, model = "within", index = c("id", "day"))
+                        data = dd_hi_FE, model = "within", index = c("id", "day"))
 summary(TTotal_Energy_FE2)
 
 
@@ -218,7 +221,7 @@ Total_Energy_RE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfo
                        + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                        + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                        + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
-                       data = dd_hi2, model = "random", index = "day")
+                       data = dd_hi_FE, model = "random", index = "day")
 summary(Total_Energy_RE)
 
 
@@ -228,7 +231,7 @@ Total_Energy_RE2 <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comf
                            Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                        + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                        + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
-                       data = dd_hi2, model = "random", index = c("id", "day"))
+                       data = dd_hi_FE, model = "random", index = c("id", "day"))
 summary(Total_Energy_RE2)
 
 
