@@ -49,6 +49,9 @@ WHERE day BETWEEN '2013-01-01' AND '2013-12-31'; ")
 
 str(dd_hi)
 
+# create a new dataframe without the duplicate LCLid column
+dd_hi_2013 <- dd_hi[, c(1:9, 11:37)]
+
 # change the datetime column to a date column
 dd_hi$day <- ymd(dd_hi$day)
 
@@ -200,7 +203,7 @@ Total_Energy_FE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfo
                   + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                   + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                   + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                  + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
+                  + AcornO_dummy + AcornP_dummy, 
                    data = dd_hi_FE, model = "within", index = "day")
 summary(Total_Energy_FE)
 
@@ -208,10 +211,9 @@ summary(Total_Energy_FE)
 Total_Energy_FE2 <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
                             Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                         + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                        + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
+                        + AcornO_dummy + AcornP_dummy, 
                         data = dd_hi_FE, model = "within", index = c("id", "day"))
-summary(TTotal_Energy_FE2)
-
+summary(Total_Energy_FE2)
 
 
 
@@ -220,7 +222,7 @@ Total_Energy_RE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfo
                        + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                        + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                        + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                       + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
+                       + AcornO_dummy + AcornP_dummy, 
                        data = dd_hi_FE, model = "random", index = "day")
 summary(Total_Energy_RE)
 
@@ -230,7 +232,7 @@ summary(Total_Energy_RE)
 Total_Energy_RE2 <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
                            Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                        + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                       + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
+                       + AcornO_dummy + AcornP_dummy, 
                        data = dd_hi_FE, model = "random", index = c("id", "day"))
 summary(Total_Energy_RE2)
 
@@ -243,29 +245,28 @@ phtest(Total_Energy_FE, Total_Energy_RE)
 
 
 
+
 # fun an FE and a RE on the data but with energy_max as the dependent variable 
 EnergyMax_FE <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
                         Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                     + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                     + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                     + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                    + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
-                    data = dd_hi2, model = "within", index = "day")
+                    + AcornO_dummy + AcornP_dummy, 
+                    data = dd_hi_FE, model = "within", index = "day")
 summary(EnergyMax_FE)
-
-rm(Total_Energy_FE)
 
 
 # estimate a random effects regression model
-attach(dd_hi2)
+attach(dd_hi_FE)
 
 EnergyMax_RE <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + 
                   Comfortable_dummy + Adversity_dummy + AcornU_dummy + 
                   AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy +
                   AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy +
                   AcornI_dummy + AcornJ_dummy + AcornK_dummy + AcornL_dummy +
-                  AcornM_dummy + AcornN_dummy + AcornO_dummy + AcornP_dummy +
-                  AcornQ_dummy, data = dd_hi2, index = "day", model = "random")
+                  AcornM_dummy + AcornN_dummy + AcornO_dummy + AcornP_dummy, 
+                  data = dd_hi_FE, index = "day", model = "random")
 summary(EnergyMax_RE)
 
 
@@ -275,8 +276,8 @@ EnergyMax_RE2 <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + Comfort
                     + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                     + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                     + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                    + AcornO_dummy + AcornP_dummy + AcornQ_dummy, 
-                    data = dd_hi2, model = "random", index = c("id", "day"))
+                    + AcornO_dummy + AcornP_dummy, 
+                    data = dd_hi_FE, model = "random", index = c("id", "day"))
 summary(EnergyMax_RE2)
 
 
