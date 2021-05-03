@@ -7,8 +7,10 @@ setwd('C:/Users/spenc/OneDrive/Documents/George Mason University/Spring 2021/CS 
 library(plm)
 library(tidyverse)
 library(rstatix)
-library(fBasics)
 library(coin)
+library(fBasics)
+library(canprot)
+library(radiant)
 library(lubridate)
 library(RMariaDB)
 
@@ -24,22 +26,6 @@ dbListTables(dbConn)
 
 
 
-# import the daily dataset table
-dd <- dbGetQuery(dbConn, "select * from daily_dataset; ")
-class(dd)
-typeof(dd)
-str(dd)
-dd$day <- ymd(dd$day)
-str(dd$day)
-str(dd)
-
-
-# import the household information table
-hi <- dbGetQuery(dbConn, "SELECT * FROM informations_households; ")
-str(hi)
-
-
-
 # import a left join of the daily dataset and household
 # information tables with only records during 2013 included
 # into RStudio as a data frame
@@ -49,22 +35,24 @@ WHERE day BETWEEN '2013-01-01' AND '2013-12-31'; ")
 
 str(dd_hi)
 
-# create a new dataframe without the duplicate LCLid column
-dd_hi_2013 <- dd_hi[, c(1:9, 11:37)]
-
 # change the datetime column to a date column
 dd_hi$day <- ymd(dd_hi$day)
 
 # add a numerical ID column
 dd_hi$id <- substr(dd_hi$LCLid, 4, 9)
 dd_hi$id <- as.integer(dd_hi$id)
+dd_hi$LCLid <- dd_hi$id   # optional
 
-# convert the stdorToU variable/column which is currently a 
-# chr variable to a factor
+
+# convert the stdorToU variable which is currently a chr variable to a factor
 dd_hi$stdorToU <- as.factor(dd_hi$stdorToU)
 
 # add a dummy variable column for time of use houses
 dd_hi$ToU_dummy <- ifelse(dd_hi$stdorToU == "ToU", 1, 0)
+
+
+# convert the Acorn_grouped column to a factor
+dd_hi$Acorn_grouped <- as.factor(dd_hi$Acorn_grouped)
 
 # add a dummy variable for affluent households
 dd_hi$Affluent_dummy <- ifelse(dd_hi$Acorn_grouped == "Affluent", 1, 0)
@@ -81,15 +69,10 @@ dd_hi$AcornA_dummy <- ifelse(dd_hi$Acorn == "ACORN-A", 1, 0)
 dd_hi$AcornB_dummy <- ifelse(dd_hi$Acorn == "ACORN-B", 1, 0)
 # add a dummy variable for households in the Acorn-C
 dd_hi$AcornC_dummy <- ifelse(dd_hi$Acorn == "ACORN-C", 1, 0)
-# add a dummy variable for households in the Acorn-D
 dd_hi$AcornD_dummy <- ifelse(dd_hi$Acorn == "ACORN-D", 1, 0)
-# add a dummy variable for households in the Acorn-E
 dd_hi$AcornE_dummy <- ifelse(dd_hi$Acorn == "ACORN-E", 1, 0)
-# add a dummy variable for households in the Acorn-F
 dd_hi$AcornF_dummy <- ifelse(dd_hi$Acorn == "ACORN-F", 1, 0)
-# add a dummy variable for households in the Acorn-G
 dd_hi$AcornG_dummy <- ifelse(dd_hi$Acorn == "ACORN-G", 1, 0)
-# add a dummy variable for households in the Acorn-H
 dd_hi$AcornH_dummy <- ifelse(dd_hi$Acorn == "ACORN-H", 1, 0)
 dd_hi$AcornI_dummy <- ifelse(dd_hi$Acorn == "ACORN-I", 1, 0)
 dd_hi$AcornJ_dummy <- ifelse(dd_hi$Acorn == "ACORN-J", 1, 0)
@@ -97,7 +80,6 @@ dd_hi$AcornK_dummy <- ifelse(dd_hi$Acorn == "ACORN-K", 1, 0)
 dd_hi$AcornL_dummy <- ifelse(dd_hi$Acorn == "ACORN-L", 1, 0)
 dd_hi$AcornM_dummy <- ifelse(dd_hi$Acorn == "ACORN-M", 1, 0)
 dd_hi$AcornN_dummy <- ifelse(dd_hi$Acorn == "ACORN-N", 1, 0)
-# add a dummy variable for households in the Acorn-O
 dd_hi$AcornO_dummy <- ifelse(dd_hi$Acorn == "ACORN-O", 1, 0)
 # add a dummy variable for households in the Acorn-P
 dd_hi$AcornP_dummy <- ifelse(dd_hi$Acorn == "ACORN-P", 1, 0)
@@ -118,6 +100,13 @@ categories4
 length(categories4)
 
 
+# create a new dataframe without the duplicate LCLid column
+dd_hi_2013 <- dd_hi[c(1:5, 8, 11, 13, 16:37)]
+dd_hi$LCLid <- dd_hi$id
+str(dd_hi_2013)
+
+
+
 
 
 dd_hi_ToU <- dbGetQuery(dbConn, "SELECT * FROM daily_dataset
@@ -127,10 +116,14 @@ informations_households.stdorToU = 'ToU' AND energy_sum IS NOT NULL; ")
 class(dd_hi_ToU)
 str(dd_hi_ToU)
 
-median(dd_hi_ToU$energy_sum)
-median(dd_hi_ToU$energy_max)
-kurtosis(dd_hi_ToU$energy_sum, na.rm = FALSE, method = c("excess", "moment", "fisher"))
+summary(dd_hi_ToU$energy_sum)
 kurtosis(dd_hi_ToU$energy_sum)
+skewness(dd_hi_ToU$energy_sum)
+
+kurtosis(dd_hi_ToU$energy_sum, na.rm = FALSE, method = c("excess", "moment", "fisher"))
+
+summary(dd_hi_ToU$energy_max)
+skewness(dd_hi_ToU$energy_max)
 kurtosis(dd_hi_ToU$energy_max)
 
 
@@ -141,11 +134,13 @@ informations_households.stdorToU = 'Std' AND energy_sum IS NOT NULL; ")
 class(dd_hi_Std)
 str(dd_hi_Std)
 
-median(dd_hi_Std$energy_sum)
-median(dd_hi_Std$energy_max)
+summary(dd_hi_Std$energy_sum)
 kurtosis(dd_hi_Std$energy_sum)
-kurtosis(dd_hi_Std$energy_max)
+skewness(dd_hi_Std$energy_sum)
 
+summary(dd_hi_Std$energy_max)
+kurtosis(dd_hi_Std$energy_max)
+skewness(dd_hi_Std$energy_max)
 
 
  
@@ -154,24 +149,73 @@ kurtosis(dd_hi_Std$energy_max)
 # also run a Wilcoxon Rank Sum Test on the sum of daily energy 
 # use because the daily usage data appears to have 
 # much more variation than a Gaussian distribution
-attach(dd_hi)
+n1 <- 4567
+n2 <- 1100
+
+n3 <- length(dd_hi_2013$energy_sum[dd_hi_2013$stdorToU == "Std"])
+n3
+n4 <- length(dd_hi_2013$energy_sum[dd_hi_2013$stdorToU == "ToU"])
+n4
+
+dd_hi_2013 <- round_df(dd_hi_2013, dec = 2)
+head(dd_hi_2013)
+attach(dd_hi_2013)
+
+rm(Std)
+ToU_sum <- dd_hi_2013$energy_sum[dd_hi_2013$stdorToU == "ToU"]
+class(ToU)
+head(ToU)
+tail(ToU)
+Std_sum <- dd_hi_2013$energy_sum[dd_hi_2013$stdorToU == "Std"]
+
+CLES(ToU_sum, Std_sum, distribution = NA)
+
+
+?wilcox.test
 wilcox.test(energy_sum ~ stdorToU, mu = 0, alternative = "greater", 
             conf.int = TRUE, paired = FALSE)
-
-wilcox.test(energy_sum ~ stdorToU, mu = 0, alternative = "less", 
+U1 <- wilcox.test(energy_sum ~ stdorToU, mu = 0, alternative = "greater", 
             conf.int = TRUE, paired = FALSE)
+(n1*(n1 + 1))/2
+U1$statistic <- U1$statistic + (n1*(n1 + 1))/2
+names(U1$statistic)
+str(U1)
+class(U1)
+U1
 
-# calculate the Wilcoxon effect size of the difference
-dd_hi %>% wilcox_effsize(energy_sum ~ stdorToU, paired = FALSE,
-                         alternative = "greater", mu = 0, ci = FALSE,
-                         conf.level = 0.95, ci.type = "perc", nboot = 1000)
+
+W1 <- U1[[1]]
+W1
+
+# calculate the common language effect size
+f1 = W1/(n3 * n4)
+f1
+
+# add a dummy variable column for standard households
+dd_hi$Std_dummy <- ifelse(dd_hi_2013$stdorToU == "Std", 1, 0)
+
+wilcox.test(ToU_dummy, energy_sum, mu = 0, alternative = 'l', 
+            paired = FALSE)
+
+wilcox.test(Std_dummy, energy_sum, alternative = 'g', 
+            paired = FALSE)
+
 
 
 # also run a Wilcoxon Rank Sum Test on the max amount of daily energy usage
 wilcox.test(energy_max ~ stdorToU, data = dd_hi, alternative = "greater")
 
-wilcox.test(energy_max ~ stdorToU, mu = 0, alternative = "greater",
+U2 <- wilcox.test(energy_max ~ stdorToU, mu = 0, alternative = "greater",
             conf.int = TRUE, paired = FALSE)
+U2$statistic <- U2$statistic + (n1*(n1 + 1))/2
+U2
+
+
+
+# calculate the Wilcoxon effect size of the difference
+dd_hi %>% wilcox_effsize(energy_sum ~ stdorToU, paired = FALSE,
+                         alternative = "greater", mu = 0, ci = FALSE,
+                         conf.level = 0.95, ci.type = "perc", nboot = 1000)
 
 # calculate the Wilcoxon effect size of the difference
 dd_hi %>% wilcox_effsize(energy_max ~ stdorToU, paired = FALSE,
@@ -194,48 +238,31 @@ dd_hi %>% wilcox_effsize(energy_max ~ stdorToU, paired = FALSE,
 # str(entity_FEs)
 # head(entity_FEs)
 
-dd_hi_FE <- dd_hi[, c(2:9, 12:37)]
-head(dd_hi_FE)
-str(dd_hi_FE)
-attach(dd_hi_FE)
+df <- dd_hi[c(1:9, 11:36)]
+head(df)
+str(df)
+rm(df)
+attach(dd_hi_2013)
+# fixed effects regression specification for energy_sum
 Total_Energy_FE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
                   Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                   + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                   + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                   + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                   + AcornO_dummy + AcornP_dummy, 
-                   data = dd_hi_FE, model = "within", index = "day")
+                   data = dd_hi_2013, model = "within", index = "day")
 summary(Total_Energy_FE)
 
 
-Total_Energy_FE2 <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                            Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
-                        + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                        + AcornO_dummy + AcornP_dummy, 
-                        data = dd_hi_FE, model = "within", index = c("id", "day"))
-summary(Total_Energy_FE2)
-
-
-
+# random effects regression specification for energy_sum
 Total_Energy_RE <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
                            Adversity_dummy  + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                        + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                        + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                        + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                        + AcornO_dummy + AcornP_dummy, 
-                       data = dd_hi_FE, model = "random", index = "day")
+                       data = dd_hi_2013, model = "random", index = "day")
 summary(Total_Energy_RE)
-
-
-
-
-Total_Energy_RE2 <- plm(formula = energy_sum ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                           Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
-                       + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                       + AcornO_dummy + AcornP_dummy, 
-                       data = dd_hi_FE, model = "random", index = c("id", "day"))
-summary(Total_Energy_RE2)
-
 
 # run a Hausman test to see whether I should use fixed effects or random effects
 phtest(Total_Energy_FE, Total_Energy_RE)
@@ -246,45 +273,28 @@ phtest(Total_Energy_FE, Total_Energy_RE)
 
 
 
-# fun an FE and a RE on the data but with energy_max as the dependent variable 
+# run a FE and a RE on the data but with energy_max as the dependent variable 
 EnergyMax_FE <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
                         Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
                     + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
                     + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
                     + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
                     + AcornO_dummy + AcornP_dummy, 
-                    data = dd_hi_FE, model = "within", index = "day")
+                    data = dd_hi_2013, model = "within", index = "day")
 summary(EnergyMax_FE)
 
 
-# estimate a random effects regression model
-attach(dd_hi_FE)
 
+# estimate a random effects regression model
 EnergyMax_RE <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + 
                   Comfortable_dummy + Adversity_dummy + AcornU_dummy + 
                   AcornA_dummy + AcornB_dummy + AcornC_dummy + AcornD_dummy +
                   AcornE_dummy + AcornF_dummy + AcornG_dummy + AcornH_dummy +
                   AcornI_dummy + AcornJ_dummy + AcornK_dummy + AcornL_dummy +
                   AcornM_dummy + AcornN_dummy + AcornO_dummy + AcornP_dummy, 
-                  data = dd_hi_FE, index = "day", model = "random")
+                  data = dd_hi_2013, index = "day", model = "random")
 summary(EnergyMax_RE)
-
-
-
-EnergyMax_RE2 <- plm(formula = energy_max ~ ToU_dummy + Affluent_dummy + Comfortable_dummy + 
-                        Adversity_dummy + AcornU_dummy + AcornA_dummy + AcornB_dummy 
-                    + AcornC_dummy + AcornD_dummy + AcornE_dummy + AcornF_dummy 
-                    + AcornG_dummy + AcornH_dummy + AcornI_dummy + AcornJ_dummy 
-                    + AcornK_dummy + AcornL_dummy + AcornM_dummy + AcornN_dummy 
-                    + AcornO_dummy + AcornP_dummy, 
-                    data = dd_hi_FE, model = "random", index = c("id", "day"))
-summary(EnergyMax_RE2)
-
 
 # run a Hausman test to see whether I should use fixed effects or random effects
 phtest(EnergyMax_FE, EnergyMax_RE)
-
-
-
-
 
